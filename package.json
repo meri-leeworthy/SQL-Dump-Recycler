@@ -1,0 +1,14 @@
+{
+  "name": "sql-dump-recycler",
+  "version": "1.0.0",
+  "description": "A CLI tool to extract data from SQL dumps and export it to seperate files.",
+  "main": "recycler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Meri Leeworthy",
+  "license": "ISC",
+  "dependencies": {
+    "inquirer": "^8.1.5"
+  }
+}

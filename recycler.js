@@ -76,6 +76,7 @@ const promptSeparator = async () =>
           { name: "Comma, i.e. `,`", value: "," },
           { name: "Comma and space, i.e. `, `", value: ", " },
           { name: "Newline, i.e. `\\n`", value: "\n" },
+          { name: "Export as JSON", value: "JSON" },
         ],
       },
     ])
@@ -180,9 +181,13 @@ const getRows = (filePath, lineNumber) => {
 
 const exportFile = (fileName, row, fileExtension, separator) => {
   let contents = "";
-  for (key in row) {
-    contents += row[key];
-    contents += separator;
+  if (separator === "JSON") {
+    contents = JSON.stringify(row);
+  } else {
+    for (key in row) {
+      contents += row[key];
+      contents += separator;
+    }
   }
   const fullFileName = fileName + "." + fileExtension;
   fs.writeFile(fullFileName, contents, (error) => {
@@ -203,13 +208,14 @@ const main = async () => {
   const tableIndex = await promptTable(tableNames);
   const rows = await getRows(filePath, tables[tableIndex][1]);
 
-  // scan for columns in the selected table
+  // scan for columns in the selected table then ask user which they want to export
   const columns = tables[tableIndex].input.match(TABLE_COLUMNS);
   const columnNames = columns.map((column, index) => {
     return { name: column, value: index };
   });
   const selectedColumns = await promptColumns(columnNames);
 
+  // return each row as an object with column name as key and data as value
   const mappedRows = rows.map((row) => {
     const splitRow = row.split("\t");
     const mappedRow = {};
@@ -223,17 +229,16 @@ const main = async () => {
     return mappedRow;
   });
 
-  let separator = "";
-  if (selectedColumns.length > 1) {
-    separator = await promptSeparator();
-  }
+  // only ask for separator if user selected more than one column
+  const separator = selectedColumns.length > 1 ? await promptSeparator() : "";
 
-  const fileExtension = await promptFileExtension();
+  // only ask for file extension if user doesnt want JSON output
+  const fileExtension =
+    separator !== "JSON" ? await promptFileExtension() : "json";
 
   mappedRows.forEach((row, index) => {
     exportFile(index, row, fileExtension, separator);
   });
-
   console.log("🐞 Files successfully exported, great job 🐞");
 };
 
